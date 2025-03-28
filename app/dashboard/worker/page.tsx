@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { ArrowRight, CheckCircle, Clock, MessageSquare, MoreHorizontal, XCircle } from "lucide-react"
 
@@ -302,78 +304,38 @@ export default function WorkerDashboard() {
         </Card>
       </div>
 
-      {/* Team Updates and Meetings */}
-      <div className="grid gap-8 md:grid-cols-2">
-        {/* Team Updates */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Team Updates</CardTitle>
-            <CardDescription>Recent activity from your team members</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {teamUpdates.map((update) => (
-                <div key={update.id} className="flex items-start gap-3 border-b pb-4 last:border-0 last:pb-0">
-                  <Avatar className="mt-0.5">
-                    <AvatarFallback>{update.user.avatar}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p>
-                      <span className="font-medium">{update.user.name}</span>{" "}
-                      <span className="text-muted-foreground">{update.action}</span>{" "}
-                      <span className="text-primary">{update.target}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">{update.time}</p>
-                  </div>
+      {/* Team Updates */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Updates</CardTitle>
+          <CardDescription>Recent activity from your team members</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {teamUpdates.map((update) => (
+              <div key={update.id} className="flex items-start gap-3 border-b pb-4 last:border-0 last:pb-0">
+                <Avatar className="mt-0.5">
+                  <AvatarFallback>{update.user.avatar}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p>
+                    <span className="font-medium">{update.user.name}</span>{" "}
+                    <span className="text-muted-foreground">{update.action}</span>{" "}
+                    <span className="text-primary">{update.target}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{update.time}</p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Meetings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Meetings</CardTitle>
-            <CardDescription>Your scheduled meetings and calls</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingMeetings.map((meeting) => (
-                <div key={meeting.id} className="rounded-lg border p-4">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-medium">{meeting.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {meeting.date} • {meeting.time}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      Join
-                    </Button>
-                  </div>
-                  <div className="mt-2 flex -space-x-2">
-                    {meeting.participants.map((participant, i) => (
-                      <Avatar key={i} className="h-6 w-6 border-2 border-background">
-                        <AvatarFallback className="text-xs">{participant}</AvatarFallback>
-                      </Avatar>
-                    ))}
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-xs">
-                      +2
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
-              View Calendar
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button variant="outline" className="w-full">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Open Team Chat
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

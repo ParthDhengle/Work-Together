@@ -1,5 +1,10 @@
+"use client"
+
+import { Tooltip } from "@/components/ui/tooltip"
+
 import Link from "next/link"
 import { ArrowRight, CheckCircle, Clock, FileText, MoreHorizontal, Plus, Users, XCircle } from "lucide-react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +20,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 
 // Sample data for the dashboard
 const projects = [
@@ -25,6 +43,7 @@ const projects = [
     tasks: { total: 24, completed: 18 },
     team: ["JD", "AS", "MK"],
     deadline: "Oct 15, 2023",
+    status: "in-progress",
   },
   {
     id: 2,
@@ -33,6 +52,7 @@ const projects = [
     tasks: { total: 32, completed: 14 },
     team: ["RB", "TM", "AS"],
     deadline: "Nov 30, 2023",
+    status: "pending",
   },
   {
     id: 3,
@@ -41,6 +61,7 @@ const projects = [
     tasks: { total: 18, completed: 16 },
     team: ["JD", "MK"],
     deadline: "Oct 5, 2023",
+    status: "completed",
   },
 ]
 
@@ -87,6 +108,14 @@ const tasks = [
   },
 ]
 
+const projectStatusData = [
+  { name: "Not Started", value: projects.filter((p) => p.status === "pending").length },
+  { name: "In Progress", value: projects.filter((p) => p.status === "in-progress").length },
+  { name: "Completed", value: projects.filter((p) => p.status === "completed").length },
+]
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28"]
+
 const workers = [
   {
     id: 1,
@@ -95,7 +124,6 @@ const workers = [
     role: "Frontend Developer",
     status: "available",
     load: { current: 2, capacity: 5 },
-    lastActive: "2 mins ago",
   },
   {
     id: 2,
@@ -103,30 +131,37 @@ const workers = [
     avatar: "MK",
     role: "Backend Developer",
     status: "busy",
-    load: { current: 4, capacity: 5 },
-    lastActive: "Just now",
+    load: { current: 5, capacity: 5 },
   },
   {
     id: 3,
+    name: "John Doe",
+    avatar: "JD",
+    role: "Project Manager",
+    status: "available",
+    load: { current: 1, capacity: 3 },
+  },
+  {
+    id: 4,
     name: "Robert Brown",
     avatar: "RB",
     role: "DevOps Engineer",
     status: "available",
-    load: { current: 3, capacity: 5 },
-    lastActive: "5 mins ago",
+    load: { current: 0, capacity: 4 },
   },
   {
-    id: 4,
+    id: 5,
     name: "Tina Murphy",
     avatar: "TM",
-    role: "UX Designer",
-    status: "offline",
-    load: { current: 0, capacity: 4 },
-    lastActive: "3 hours ago",
+    role: "UI/UX Designer",
+    status: "busy",
+    load: { current: 3, capacity: 3 },
   },
 ]
 
 export default function ManagerDashboard() {
+  const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false)
+
   return (
     <div className="space-y-8">
       {/* Welcome section */}
@@ -136,10 +171,43 @@ export default function ManagerDashboard() {
           <p className="text-muted-foreground">Here's what's happening with your projects today.</p>
         </div>
         <div className="mt-4 flex items-center gap-2 sm:mt-0">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </Button>
+          <Dialog open={isNewProjectDialogOpen} onOpenChange={setIsNewProjectDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[525px]">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>Create a new project and assign it to a team member.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="project-name">Project Name</Label>
+                  <Input id="project-name" placeholder="Enter project name" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="project-description">Description</Label>
+                  <Textarea id="project-description" placeholder="Enter project description" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-deadline">Deadline</Label>
+                    <Input id="project-deadline" type="date" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-team-size">Team Size</Label>
+                    <Input id="project-team-size" type="number" placeholder="Enter team size" />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit">Create Project</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -253,6 +321,35 @@ export default function ManagerDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Project Status Analytics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Status</CardTitle>
+          <CardDescription>Overview of project statuses</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={projectStatusData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                fill="#8884d8"
+                label
+              >
+                {projectStatusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Tasks and Workers section */}
       <div className="grid gap-4 lg:grid-cols-3">

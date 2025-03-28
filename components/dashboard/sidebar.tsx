@@ -1,5 +1,7 @@
 "use client"
 
+import { SidebarHeader,Sidebar as UISidebar} from "@/components/ui/sidebar"
+
 import type React from "react"
 
 import Link from "next/link"
@@ -16,6 +18,7 @@ import {
   Video,
   FolderOpen,
   CheckSquare,
+  Bell
 } from "lucide-react"
 
 import {
@@ -25,7 +28,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -59,11 +61,44 @@ function SidebarLink({ href, icon: Icon, label, isActive, role = "all", userRole
     </SidebarMenuItem>
   )
 }
+interface DashboardSidebarProps {
+  userRole: "manager" | "leader" | "worker"
+}
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
   const pathname = usePathname()
   // In a real app, this would come from authentication context
-  const userRole = "manager" // Could be "manager", "leader", or "worker"
+  const menuItems = {
+    manager: [
+      { href: "/dashboard", label: "Overview", icon: Home },
+      { href: "/dashboard/projects", label: "Projects", icon: Users },
+      { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart },
+      { href: "/dashboard/reports", label: "Reports", icon: FileText },
+      { href: "/dashboard/team", label: "Team", icon: Users },
+      { href: "/dashboard/chat", label: "Chat", icon: MessageSquare },
+      { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
+      { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    ],
+    leader: [
+      { href: "/dashboard/leader", label: "Overview", icon: Home },
+      { href: "/dashboard/leader/team", label: "Team", icon: Users },
+      { href: "/dashboard/leader/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/dashboard/leader/assignments", label: "Assignments", icon: CheckSquare },
+      { href: "/dashboard/leader/chat", label: "Chat", icon: MessageSquare },
+      { href: "/dashboard/leader/notifications", label: "Notifications", icon: Bell },
+      { href: "/dashboard/leader/settings", label: "Settings", icon: Settings },
+    ],
+    worker: [
+      { href: "/dashboard/worker", label: "Overview", icon: Home },
+      { href: "/dashboard/worker/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/dashboard/worker/chat", label: "Chat", icon: MessageSquare },
+      { href: "/dashboard/worker/notifications", label: "Notifications", icon: Bell },
+      { href: "/dashboard/worker/settings", label: "Settings", icon: Settings },
+    ],
+  }
+
+  const items = menuItems[userRole]
 
   return (
     <Sidebar>

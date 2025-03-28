@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, ChevronDown, Search } from "lucide-react"
+import { Bell, ChevronDown, Search, MessageSquare, Calendar, CheckSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Badge } from "@/components/ui/badge"
 
 interface HeaderProps {
   userRole: "manager" | "leader" | "worker"
@@ -26,16 +27,22 @@ interface HeaderProps {
 export function DashboardHeader({ userRole, userName }: HeaderProps) {
   const pathname = usePathname()
 
-  // Get the current page title based on the pathname
   const getPageTitle = () => {
     const path = pathname.split("/").pop() || "dashboard"
     return path.charAt(0).toUpperCase() + path.slice(1)
   }
 
+  const notifications = [
+    { id: 1, type: "task", title: "New task assigned", description: "Design homepage mockup", time: "2 hours ago", icon: CheckSquare, read: false },
+    { id: 2, type: "message", title: "New message", description: "Maria: Can we discuss the project timeline?", time: "3 hours ago", icon: MessageSquare, read: false },
+    { id: 3, type: "reminder", title: "Meeting reminder", description: "Team standup in 30 minutes", time: "30 minutes ago", icon: Calendar, read: true },
+  ]
+
+  const unreadCount = notifications.filter(n => !n.read).length
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
       <SidebarTrigger className="md:hidden" />
-
       <div className="flex items-center gap-2 font-semibold">{getPageTitle()}</div>
 
       <div className="relative ml-auto flex-1 max-w-md">
@@ -48,32 +55,48 @@ export function DashboardHeader({ userRole, userName }: HeaderProps) {
           <Button variant="outline" size="icon" className="rounded-full">
             <Bell className="h-5 w-5" />
             <span className="sr-only">Notifications</span>
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-              3
-            </span>
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-medium"
+              >
+                {unreadCount}
+              </Badge>
+            )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-80">
-          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+          <DropdownMenuLabel className="flex items-center justify-between">
+            <span>Notifications</span>
+            {unreadCount > 0 && (
+              <Badge variant="secondary" className="ml-auto">
+                {unreadCount} new
+              </Badge>
+            )}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <div className="max-h-80 overflow-auto">
-            {[1, 2, 3].map((i) => (
-              <DropdownMenuItem key={i} className="cursor-pointer py-3">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`/placeholder.svg?height=32&width=32&text=U${i}`} />
-                    <AvatarFallback>U{i}</AvatarFallback>
-                  </Avatar>
-                  <div className="grid gap-1">
-                    <p className="text-sm font-medium">New task assigned to you</p>
-                    <p className="text-xs text-muted-foreground">
-                      User {i} assigned you a new task: "Complete project documentation"
-                    </p>
-                    <p className="text-xs text-muted-foreground">2 hour{i > 1 ? "s" : ""} ago</p>
+            {notifications.map((notification) => {
+              const Icon = notification.icon
+              return (
+                <DropdownMenuItem key={notification.id} className="cursor-pointer py-3 flex items-start gap-3">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${notification.read ? 'bg-muted' : 'bg-primary/10'}`}>
+                    <Icon className={`h-4 w-4 ${notification.read ? 'text-muted-foreground' : 'text-primary'}`} />
                   </div>
-                </div>
-              </DropdownMenuItem>
-            ))}
+                  <div className="grid gap-1 flex-1">
+                    <p className={`text-sm font-medium ${notification.read ? '' : 'text-primary'}`}>
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {notification.description}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {notification.time}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+              )
+            })}
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild className="cursor-pointer justify-center">
@@ -92,10 +115,7 @@ export function DashboardHeader({ userRole, userName }: HeaderProps) {
             <Avatar className="h-8 w-8">
               <AvatarImage src="/placeholder.svg?height=32&width=32" />
               <AvatarFallback>
-                {userName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
+                {userName.split(" ").map((n) => n[0]).join("")}
               </AvatarFallback>
             </Avatar>
             <div className="hidden md:flex md:flex-col md:items-start md:leading-none">
@@ -123,4 +143,3 @@ export function DashboardHeader({ userRole, userName }: HeaderProps) {
     </header>
   )
 }
-

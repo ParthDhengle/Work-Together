@@ -138,3 +138,5 @@ export {
   SheetTitle,
   SheetDescription,
 }
+
+export type { SheetContentProps } // Export type separately for type-only export
