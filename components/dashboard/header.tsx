@@ -1,194 +1,126 @@
 "use client"
 
-import type React from "react"
-
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  BarChart,
-  Calendar,
-  FileText,
-  Home,
-  MessageSquare,
-  Phone,
-  Settings,
-  Users,
-  Video,
-  FolderOpen,
-  CheckSquare,
-} from "lucide-react"
+import { Bell, ChevronDown, Search } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-  SidebarSeparator,
-} from "@/components/ui/sidebar"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
-interface SidebarLinkProps {
-  href: string
-  icon: React.ElementType
-  label: string
-  isActive?: boolean
-  role?: "manager" | "leader" | "worker" | "all"
-  userRole?: string
+interface HeaderProps {
+  userRole: "manager" | "leader" | "worker"
+  userName: string
 }
 
-function SidebarLink({ href, icon: Icon, label, isActive, role = "all", userRole }: SidebarLinkProps) {
-  // If the link is role-specific and doesn't match the user's role, don't render it
-  if (role !== "all" && userRole && role !== userRole) {
-    return null
+export function DashboardHeader({ userRole, userName }: HeaderProps) {
+  const pathname = usePathname()
+
+  // Get the current page title based on the pathname
+  const getPageTitle = () => {
+    const path = pathname.split("/").pop() || "dashboard"
+    return path.charAt(0).toUpperCase() + path.slice(1)
   }
 
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={href}>
-          <Icon className="h-5 w-5" />
-          <span>{label}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+      <SidebarTrigger className="md:hidden" />
 
-export function DashboardSidebar() {
-  const pathname = usePathname()
-  // In a real app, this would come from authentication context
-  const userRole = "manager" // Could be "manager", "leader", or "worker"
+      <div className="flex items-center gap-2 font-semibold">{getPageTitle()}</div>
 
-  return (
-    <Sidebar>
-      <SidebarHeader className="flex items-center px-4 py-2">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">
-            WT
+      <div className="relative ml-auto flex-1 max-w-md">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input type="search" placeholder="Search..." className="w-full rounded-full bg-muted pl-8 md:max-w-sm" />
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon" className="rounded-full">
+            <Bell className="h-5 w-5" />
+            <span className="sr-only">Notifications</span>
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+              3
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <div className="max-h-80 overflow-auto">
+            {[1, 2, 3].map((i) => (
+              <DropdownMenuItem key={i} className="cursor-pointer py-3">
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`/placeholder.svg?height=32&width=32&text=U${i}`} />
+                    <AvatarFallback>U{i}</AvatarFallback>
+                  </Avatar>
+                  <div className="grid gap-1">
+                    <p className="text-sm font-medium">New task assigned to you</p>
+                    <p className="text-xs text-muted-foreground">
+                      User {i} assigned you a new task: "Complete project documentation"
+                    </p>
+                    <p className="text-xs text-muted-foreground">2 hour{i > 1 ? "s" : ""} ago</p>
+                  </div>
+                </div>
+              </DropdownMenuItem>
+            ))}
           </div>
-          <span className="text-lg font-semibold">Work Together</span>
-        </Link>
-      </SidebarHeader>
-      <SidebarSeparator />
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarLink
-                href="/dashboard"
-                icon={Home}
-                label="Overview"
-                isActive={pathname === "/dashboard"}
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/tasks"
-                icon={CheckSquare}
-                label="Tasks"
-                isActive={pathname.startsWith("/dashboard/tasks")}
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/projects"
-                icon={FileText}
-                label="Projects"
-                isActive={pathname.startsWith("/dashboard/projects")}
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/team"
-                icon={Users}
-                label="Team"
-                isActive={pathname.startsWith("/dashboard/team")}
-                role="leader"
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/files"
-                icon={FolderOpen}
-                label="Files"
-                isActive={pathname.startsWith("/dashboard/files")}
-                userRole={userRole}
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild className="cursor-pointer justify-center">
+            <Link href="/dashboard/notifications" className="text-center text-sm font-medium">
+              View all notifications
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-        <SidebarSeparator />
+      <ThemeToggle />
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Communication</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarLink
-                href="/dashboard/chat"
-                icon={MessageSquare}
-                label="Chat"
-                isActive={pathname.startsWith("/dashboard/chat")}
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/calls/audio"
-                icon={Phone}
-                label="Audio Calls"
-                isActive={pathname.startsWith("/dashboard/calls/audio")}
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/calls/video"
-                icon={Video}
-                label="Video Calls"
-                isActive={pathname.startsWith("/dashboard/calls/video")}
-                userRole={userRole}
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Analytics</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarLink
-                href="/dashboard/analytics"
-                icon={BarChart}
-                label="Reports"
-                isActive={pathname.startsWith("/dashboard/analytics")}
-                role="manager"
-                userRole={userRole}
-              />
-              <SidebarLink
-                href="/dashboard/calendar"
-                icon={Calendar}
-                label="Calendar"
-                isActive={pathname.startsWith("/dashboard/calendar")}
-                userRole={userRole}
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarLink
-            href="/dashboard/settings"
-            icon={Settings}
-            label="Settings"
-            isActive={pathname.startsWith("/dashboard/settings")}
-            userRole={userRole}
-          />
-        </SidebarMenu>
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="/placeholder.svg?height=32&width=32" />
+              <AvatarFallback>
+                {userName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </AvatarFallback>
+            </Avatar>
+            <div className="hidden md:flex md:flex-col md:items-start md:leading-none">
+              <span className="text-sm font-medium">{userName}</span>
+              <span className="text-xs text-muted-foreground capitalize">{userRole}</span>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/profile">Profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings">Settings</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/signout">Sign out</Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </header>
   )
 }
 
