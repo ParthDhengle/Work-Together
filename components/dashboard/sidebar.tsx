@@ -4,7 +4,19 @@ import type React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart, Calendar, FileText, Home, MessageSquare, Phone, Settings, Users, Video } from "lucide-react"
+import {
+  BarChart,
+  Calendar,
+  FileText,
+  Home,
+  MessageSquare,
+  Phone,
+  Settings,
+  Users,
+  Video,
+  FolderOpen,
+  CheckSquare,
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -26,9 +38,16 @@ interface SidebarLinkProps {
   icon: React.ElementType
   label: string
   isActive?: boolean
+  role?: "manager" | "leader" | "worker" | "all"
+  userRole?: string
 }
 
-function SidebarLink({ href, icon: Icon, label, isActive }: SidebarLinkProps) {
+function SidebarLink({ href, icon: Icon, label, isActive, role = "all", userRole }: SidebarLinkProps) {
+  // If the link is role-specific and doesn't match the user's role, don't render it
+  if (role !== "all" && userRole && role !== userRole) {
+    return null
+  }
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
@@ -43,6 +62,8 @@ function SidebarLink({ href, icon: Icon, label, isActive }: SidebarLinkProps) {
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  // In a real app, this would come from authentication context
+  const userRole = "manager" // Could be "manager", "leader", or "worker"
 
   return (
     <Sidebar>
@@ -59,24 +80,41 @@ export function DashboardSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarLink href="/dashboard" icon={Home} label="Dashboard" isActive={pathname === "/dashboard"} />
+              <SidebarLink
+                href="/dashboard"
+                icon={Home}
+                label="Overview"
+                isActive={pathname === "/dashboard"}
+                userRole={userRole}
+              />
+              <SidebarLink
+                href="/dashboard/tasks"
+                icon={CheckSquare}
+                label="Tasks"
+                isActive={pathname.startsWith("/dashboard/tasks")}
+                userRole={userRole}
+              />
               <SidebarLink
                 href="/dashboard/projects"
                 icon={FileText}
                 label="Projects"
                 isActive={pathname.startsWith("/dashboard/projects")}
+                userRole={userRole}
               />
               <SidebarLink
-                href="/dashboard/tasks"
-                icon={Calendar}
-                label="Tasks"
-                isActive={pathname.startsWith("/dashboard/tasks")}
-              />
-              <SidebarLink
-                href="/dashboard/workers"
+                href="/dashboard/team"
                 icon={Users}
-                label="Workers"
-                isActive={pathname.startsWith("/dashboard/workers")}
+                label="Team"
+                isActive={pathname.startsWith("/dashboard/team")}
+                role="leader"
+                userRole={userRole}
+              />
+              <SidebarLink
+                href="/dashboard/files"
+                icon={FolderOpen}
+                label="Files"
+                isActive={pathname.startsWith("/dashboard/files")}
+                userRole={userRole}
               />
             </SidebarMenu>
           </SidebarGroupContent>
@@ -93,18 +131,21 @@ export function DashboardSidebar() {
                 icon={MessageSquare}
                 label="Chat"
                 isActive={pathname.startsWith("/dashboard/chat")}
+                userRole={userRole}
               />
               <SidebarLink
                 href="/dashboard/calls/audio"
                 icon={Phone}
                 label="Audio Calls"
                 isActive={pathname.startsWith("/dashboard/calls/audio")}
+                userRole={userRole}
               />
               <SidebarLink
                 href="/dashboard/calls/video"
                 icon={Video}
                 label="Video Calls"
                 isActive={pathname.startsWith("/dashboard/calls/video")}
+                userRole={userRole}
               />
             </SidebarMenu>
           </SidebarGroupContent>
@@ -121,6 +162,15 @@ export function DashboardSidebar() {
                 icon={BarChart}
                 label="Reports"
                 isActive={pathname.startsWith("/dashboard/analytics")}
+                role="manager"
+                userRole={userRole}
+              />
+              <SidebarLink
+                href="/dashboard/calendar"
+                icon={Calendar}
+                label="Calendar"
+                isActive={pathname.startsWith("/dashboard/calendar")}
+                userRole={userRole}
               />
             </SidebarMenu>
           </SidebarGroupContent>
@@ -133,6 +183,7 @@ export function DashboardSidebar() {
             icon={Settings}
             label="Settings"
             isActive={pathname.startsWith("/dashboard/settings")}
+            userRole={userRole}
           />
         </SidebarMenu>
       </SidebarFooter>
