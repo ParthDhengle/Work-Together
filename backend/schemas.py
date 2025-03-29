@@ -1,35 +1,36 @@
 from pydantic import BaseModel, UUID4, EmailStr
 from datetime import datetime
 from typing import Optional
+from enum import Enum  # Import Enum
 
-# Enums (manually defined to match Prisma schema)
-class ProjectStatus(str):
+# Enums (corrected to inherit from Enum)
+class ProjectStatus(Enum):
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
 
-class TaskStatus(str):
+class TaskStatus(Enum):
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
 
-class Priority(str):
+class Priority(Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
 
-class Team(str):
+class Team(Enum):
     ENGINEERING = "ENGINEERING"
     DESIGN = "DESIGN"
     PRODUCT = "PRODUCT"
     MANAGEMENT = "MANAGEMENT"
 
-class WorkerStatus(str):
+class WorkerStatus(Enum):
     AVAILABLE = "AVAILABLE"
     BUSY = "BUSY"
     OFFLINE = "OFFLINE"
 
-# Base schemas
+# Base schemas (unchanged)
 class ProjectBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -61,7 +62,7 @@ class LogBase(BaseModel):
     action: str
     details: Optional[str] = None
 
-# Response schemas
+# Response schemas (unchanged)
 class ProjectResponse(ProjectBase):
     id: UUID4
     createdAt: datetime
@@ -95,7 +96,7 @@ class LogResponse(LogBase):
     class Config:
         from_attributes = True
 
-# Request schemas
+# Request schemas (unchanged)
 class ProjectCreate(ProjectBase):
     pass
 
