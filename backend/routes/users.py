@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from ..schemas import UserCreate, UserLogin
+from schemas import UserCreate, UserLogin
 import asyncpg
 from jose import JWTError, jwt
 from datetime import datetime, timedelta

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import asyncpg
-from .database import get_db_pool
+from database import get_db_pool  # Changed to absolute import
 from routes.tasks import router as tasks_router
 from routes.profile import router as profile_router
 from routes.users import router as users_router
@@ -11,7 +11,7 @@ app = FastAPI()
 # CORS configuration for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Adjust to your frontend URL
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,7 +24,6 @@ async def startup():
     global db_pool
     db_pool = await get_db_pool()
     async with db_pool.acquire() as conn:
-        # Create tables if they don’t exist
         await conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -60,12 +59,10 @@ async def startup():
 async def shutdown():
     await db_pool.close()
 
-# Dependency to get database connection
 async def get_db():
     async with db_pool.acquire() as connection:
         yield connection
 
-# Include route modules
 app.include_router(tasks_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
 app.include_router(users_router, prefix="/api")

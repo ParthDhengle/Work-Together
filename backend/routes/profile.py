@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..schemas import UserUpdate
+from schemas import UserUpdate
 import asyncpg
 from database import get_db
 

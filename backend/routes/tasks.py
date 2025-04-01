@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..schemas import TaskCreate, TaskUpdate
+from schemas import TaskCreate, TaskUpdate
 import asyncpg
 from database import get_db
 
