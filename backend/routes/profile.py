@@ -1,16 +1,28 @@
-from fastapi import APIRouter, HTTPException
-from schemas import WorkerCreate, WorkerResponse
-from crud import create_worker, get_worker
+from fastapi import APIRouter, Depends, HTTPException
+from ..schemas import UserUpdate
+import asyncpg
+from database import get_db
 
 router = APIRouter()
 
-@router.post("/", response_model=WorkerResponse)
-async def create_profile(worker: WorkerCreate):
-    return await create_worker(worker)
+@router.get("/profile/{user_id}")
+async def get_profile(user_id: int, db: asyncpg.Connection = Depends(get_db)):
+    user = await db.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return dict(user)
 
-@router.get("/{worker_id}", response_model=WorkerResponse)
-async def read_profile(worker_id: str):
-    worker = await get_worker(worker_id)
-    if worker is None:
-        raise HTTPException(status_code=404, detail="Worker not found")
-    return worker
+@router.put("/profile/{user_id}")
+async def update_profile(user_id: int, user: UserUpdate, db: asyncpg.Connection = Depends(get_db)):
+    update_fields = {k: v for k, v in user.dict().items() if v is not None}
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    set_clause = ", ".join(f"{k} = ${i+2}" for i, k in enumerate(update_fields.keys()))
+    query = f"UPDATE users SET {set_clause} WHERE id = $1"
+    values = [user_id] + list(update_fields.values())
+    
+    result = await db.execute(query, *values)
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Profile updated"}

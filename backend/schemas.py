@@ -1,113 +1,39 @@
-from pydantic import BaseModel, UUID4, EmailStr
-from datetime import datetime
+from pydantic import BaseModel
 from typing import Optional
-from enum import Enum  # Import Enum
 
-# Enums (corrected to inherit from Enum)
-class ProjectStatus(Enum):
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-
-class TaskStatus(Enum):
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-
-class Priority(Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-
-class Team(Enum):
-    ENGINEERING = "ENGINEERING"
-    DESIGN = "DESIGN"
-    PRODUCT = "PRODUCT"
-    MANAGEMENT = "MANAGEMENT"
-
-class WorkerStatus(Enum):
-    AVAILABLE = "AVAILABLE"
-    BUSY = "BUSY"
-    OFFLINE = "OFFLINE"
-
-# Base schemas (unchanged)
-class ProjectBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    startDate: datetime
-    endDate: datetime
-    status: ProjectStatus = ProjectStatus.PENDING
-
-class WorkerBase(BaseModel):
-    name: str
-    email: EmailStr
-    role: Optional[str] = None
-    team: Team
-    status: WorkerStatus = WorkerStatus.AVAILABLE
-
-class TaskBase(BaseModel):
-    projectId: UUID4
+class TaskCreate(BaseModel):
     title: str
+    description: str
+    status: str
+    priority: str
+    assignee_id: int
+    due_date: str  # ISO format, e.g., "2023-10-01"
+    project_id: int
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
     description: Optional[str] = None
-    status: TaskStatus = TaskStatus.PENDING
-    priority: Priority = Priority.MEDIUM
-    dueDate: Optional[datetime] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    assignee_id: Optional[int] = None
+    due_date: Optional[str] = None
+    project_id: Optional[int] = None
 
-class AssignmentBase(BaseModel):
-    taskId: UUID4
-    workerId: UUID4
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str
 
-class LogBase(BaseModel):
-    workerId: UUID4
-    action: str
-    details: Optional[str] = None
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    bio: Optional[str] = None
+    job_title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
 
-# Response schemas (unchanged)
-class ProjectResponse(ProjectBase):
-    id: UUID4
-    createdAt: datetime
-    updatedAt: datetime
-    class Config:
-        from_attributes = True
-
-class WorkerResponse(WorkerBase):
-    id: UUID4
-    createdAt: datetime
-    updatedAt: datetime
-    class Config:
-        from_attributes = True
-
-class TaskResponse(TaskBase):
-    id: UUID4
-    createdAt: datetime
-    updatedAt: datetime
-    class Config:
-        from_attributes = True
-
-class AssignmentResponse(AssignmentBase):
-    id: UUID4
-    assignedAt: datetime
-    class Config:
-        from_attributes = True
-
-class LogResponse(LogBase):
-    id: UUID4
-    timestamp: datetime
-    class Config:
-        from_attributes = True
-
-# Request schemas (unchanged)
-class ProjectCreate(ProjectBase):
-    pass
-
-class WorkerCreate(WorkerBase):
-    pass
-
-class TaskCreate(TaskBase):
-    pass
-
-class AssignmentCreate(AssignmentBase):
-    pass
-
-class LogCreate(LogBase):
-    pass
+class UserLogin(BaseModel):
+    email: str
+    password: str

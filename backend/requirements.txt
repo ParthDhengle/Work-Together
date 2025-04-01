@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-prisma
+asyncpg
+python-jose[cryptography]
+passlib[bcrypt]
 pydantic
-python-dotenv
-certifi

@@ -1,35 +1,49 @@
-from fastapi import APIRouter, HTTPException
-from typing import List
-from schemas import TaskCreate, TaskResponse
-from crud import create_task, get_tasks, get_task, update_task, delete_task
+from fastapi import APIRouter, Depends, HTTPException
+from ..schemas import TaskCreate, TaskUpdate
+import asyncpg
+from database import get_db
 
 router = APIRouter()
 
-@router.post("/", response_model=TaskResponse)
-async def create_new_task(task: TaskCreate):
-    return await create_task(task)
+@router.get("/tasks")
+async def read_tasks(db: asyncpg.Connection = Depends(get_db)):
+    tasks = await db.fetch("""
+        SELECT t.*, u.name as assignee_name, p.name as project_name
+        FROM tasks t
+        LEFT JOIN users u ONs t.assignee_id = u.id
+        LEFT JOIN projects p ON t.project_id = p.id
+    """)
+    return [dict(task) for task in tasks]
 
-@router.get("/", response_model=List[TaskResponse])
-async def read_tasks(skip: int = 0, limit: int = 100):
-    return await get_tasks(skip=skip, limit=limit)
+@router.post("/tasks")
+async def create_task(task: TaskCreate, db: asyncpg.Connection = Depends(get_db)):
+    query = """
+    INSERT INTO tasks (title, description, status, priority, assignee_id, due_date, project_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING id
+    """
+    task_id = await db.fetchval(
+        query, task.title, task.description, task.status, task.priority,
+        task.assignee_id, task.due_date, task.project_id
+    )
+    return {"id": task_id}
 
-@router.get("/{task_id}", response_model=TaskResponse)
-async def read_task(task_id: str):
-    task = await get_task(task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
+@router.put("/tasks/{task_id}")
+async def update_task(task_id: int, task: TaskUpdate, db: asyncpg.Connection = Depends(get_db)):
+    update_fields = {k: v for k, v in task.dict().items() if v is not None}
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    set_clause = ", ".join(f"{k} = ${i+2}" for i, k in enumerate(update_fields.keys()))
+    query = f"UPDATE tasks SET {set_clause} WHERE id = $1"
+    values = [task_id] + list(update_fields.values())
+    
+    await db.execute(query, *values)
+    return {"message": "Task updated"}
 
-@router.put("/{task_id}", response_model=TaskResponse)
-async def update_existing_task(task_id: str, task: TaskCreate):
-    updated_task = await update_task(task_id, task)
-    if updated_task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return updated_task
-
-@router.delete("/{task_id}")
-async def delete_existing_task(task_id: str):
-    task = await delete_task(task_id)
-    if task is None:
+@router.delete("/tasks/{task_id}")
+async def delete_task(task_id: int, db: asyncpg.Connection = Depends(get_db)):
+    result = await db.execute("DELETE FROM tasks WHERE id = $1", task_id)
+    if result == "DELETE 0":
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task deleted"}
