@@ -4,7 +4,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { Github, Mail } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { toast } from "@/components/ui/use-toast"
 
 const signupSchema = z
   .object({
@@ -21,8 +21,7 @@ const signupSchema = z
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
-    company: z.string().optional(),
-    role: z.string(),
+    role: z.enum(["MANAGER", "LEADER", "WORKER"]), // Match backend enum
     terms: z.boolean().refine((val) => val === true, {
       message: "You must agree to the terms and conditions",
     }),
@@ -44,37 +43,58 @@ export default function SignupPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      company: "",
-      role: "worker",
+      role: "WORKER",
       terms: false,
     },
   })
 
-  const onSubmit = (data: SignupFormValues) => {
+  const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true)
-    // Simulate API call
-    console.log("Form data:", data)
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:8000/api/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.fullName,
+          email: data.email,
+          password: data.password,
+          role: data.role,  // Convert to match backend enum (MANAGER, LEADER, WORKER)
+        }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        toast({ title: "Success", description: "Account created successfully" })
+        window.location.href = "/dashboard"
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Error",
+          description: error.detail || "Signup failed",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during signup",
+        variant: "destructive",
+      })
+    } finally {
       setIsLoading(false)
-      // Redirect to dashboard after successful signup
-      window.location.href = "/dashboard"
-    }, 1500)
+    }
   }
 
   return (
+    // ... rest of your JSX remains unchanged ...
     <div className="flex min-h-screen">
-      {/* Left side - Form */}
       <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-2">
-              <Image
-                src="/placeholder.svg?height=32&width=32"
-                alt="Work Together Logo"
-                width={32}
-                height={32}
-                className="rounded"
-              />
+              <Image src="/placeholder.svg?height=32&width=32" alt="Work Together Logo" width={32} height={32} className="rounded" />
               <span className="text-xl font-bold text-primary">Work Together</span>
             </div>
             <ThemeToggle />
@@ -113,77 +133,47 @@ export default function SignupPage() {
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="fullName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="john@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="email" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="john@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="password" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="confirmPassword" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Name (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Acme Inc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
+              <FormField
                   control={form.control}
                   name="role"
                   render={({ field }) => (
@@ -196,10 +186,9 @@ export default function SignupPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="leader">Leader</SelectItem>
-                          <SelectItem value="worker">Worker</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="MANAGER">Manager</SelectItem>
+                          <SelectItem value="LEADER">Leader</SelectItem>
+                          <SelectItem value="WORKER">Worker</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -207,30 +196,26 @@ export default function SignupPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="terms"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm">
-                          I agree to the{" "}
-                          <Link href="#" className="text-primary hover:underline">
-                            Terms of Service
-                          </Link>{" "}
-                          and{" "}
-                          <Link href="#" className="text-primary hover:underline">
-                            Privacy Policy
-                          </Link>
-                        </FormLabel>
-                        <FormMessage />
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="terms" render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm">
+                        I agree to the{" "}
+                        <Link href="#" className="text-primary hover:underline">
+                          Terms of Service
+                        </Link>{" "}
+                        and{" "}
+                        <Link href="#" className="text-primary hover:underline">
+                          Privacy Policy
+                        </Link>
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )} />
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}
@@ -241,7 +226,6 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Right side - Image */}
       <div className="relative hidden w-0 flex-1 lg:block">
         <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-wt-blue-500 to-wt-green-500 opacity-90" />
         <Image
@@ -263,4 +247,3 @@ export default function SignupPage() {
     </div>
   )
 }
-
